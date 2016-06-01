@@ -9,4 +9,9 @@
     <string name="select_modify_date">Modify Date</string>
     <string name="select_modify_time">Modify Time</string>
     <string name="select_title">Please select one to modify:</string>
+    <string name="new_crime">New Crime</string>
+    <string name="delete_crime">Delete</string>
+    <string name="show_subtitle">Show Subtitle</string>
+    <string name="hide_subtitle">Hide Subtitle</string>
+    <string name="subtitle">If you see something, say something.</string>
 </resources>

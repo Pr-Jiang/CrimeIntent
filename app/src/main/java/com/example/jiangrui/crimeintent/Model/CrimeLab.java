@@ -17,25 +17,34 @@ public class CrimeLab {
         mAppContext = appContext;
         mCrimes = new ArrayList<Crime>();
 
+        /*测试
         for(int i = 0;i<100;i++){              //生成100个Crime
             Crime crime = new Crime();
             crime.setTitle("Crime #"+i);
             crime.setIsSolved(i%2==0);
             mCrimes.add(crime);
         }
+        */
     }
-    public static CrimeLab get(Context context){
-        if(sCrimeLab==null){
+
+    public static CrimeLab get(Context context) {
+        if (sCrimeLab == null) {
             sCrimeLab = new CrimeLab(context.getApplicationContext());
         }
         return sCrimeLab;
     }
-    public ArrayList<Crime> getCrimes(){
+
+    public void addCrime(Crime crime){
+        mCrimes.add(crime);
+    }
+
+    public ArrayList<Crime> getCrimes() {
         return mCrimes;
     }
-    public Crime getCrime(UUID id){
-        for(Crime c:mCrimes){
-            if(c.getId().equals(id))
+
+    public Crime getCrime(UUID id) {
+        for (Crime c : mCrimes) {
+            if (c.getId().equals(id))
                 return c;
         }
         return null;

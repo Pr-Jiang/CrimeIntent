@@ -1,14 +1,18 @@
 package com.example.jiangrui.crimeintent.Controller;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.NavUtils;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -52,6 +56,7 @@ public class CrimeFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
 //        mCrime = new Crime();
 //        UUID crimeId = (UUID) getActivity().getIntent().getSerializableExtra(EXTRA_CRIME_ID);
         UUID crimeId = (UUID) getArguments().getSerializable(EXTRA_CRIME_ID);   //fragment argument 方法获取EXTRA_CRIME_ID
@@ -59,20 +64,26 @@ public class CrimeFragment extends Fragment {
     }
 
     @Nullable
+    @TargetApi(11)
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            if(NavUtils.getParentActivityName(getActivity()) != null){
+                getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
+            }
+        }
         View view = inflater.inflate(R.layout.fragment_crime, container, false);
         mTitleField = (EditText) view.findViewById(R.id.crime_title);
         mTitleField.setText(mCrime.getTitle());
         mTitleField.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                mCrime.setTitle(s.toString());
+
             }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-
+                mCrime.setTitle(s.toString());
             }
 
             @Override
@@ -129,6 +140,20 @@ public class CrimeFragment extends Fragment {
     }
 
     @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                if (NavUtils.getParentActivityName(getActivity()) != null) {
+                    NavUtils.navigateUpFromSameTask(getActivity());
+                    return true;
+                }
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+
+    }
+
+    @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode != Activity.RESULT_OK)
             return;
@@ -142,22 +167,21 @@ public class CrimeFragment extends Fragment {
                 dateDialog.setTargetFragment(CrimeFragment.this, REQUEST_DATE);
                 dateDialog.show(fragmentManager, DIALOG_DATE);
 
-            }
-            else if (mChoice == SelectDialogFragment.CHOICE_TIME) {
+            } else if (mChoice == SelectDialogFragment.CHOICE_TIME) {
                 TimePickerFragment timeDialog = TimePickerFragment.newInstance(mCrime.getDate());
-                timeDialog.setTargetFragment(CrimeFragment.this,REQUEST_TIME);
-                timeDialog.show(fragmentManager,DIALOG_TIME);
+                timeDialog.setTargetFragment(CrimeFragment.this, REQUEST_TIME);
+                timeDialog.show(fragmentManager, DIALOG_TIME);
             }
         }
-        if(requestCode == REQUEST_DATE){
+        if (requestCode == REQUEST_DATE) {
             Date date = (Date) data.getSerializableExtra(DatePickerFragment.EXTRA_DATE);
             mCrime.setDate(date);
             updateDate();
         }
-        if(requestCode == REQUEST_TIME){
-                Date date = (Date) data.getSerializableExtra(TimePickerFragment.EXTRA_TIME);
-                mCrime.setDate(date);
-                updateDate();
+        if (requestCode == REQUEST_TIME) {
+            Date date = (Date) data.getSerializableExtra(TimePickerFragment.EXTRA_TIME);
+            mCrime.setDate(date);
+            updateDate();
         }
 
     }
