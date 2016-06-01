@@ -6,7 +6,7 @@
 ![](https://raw.githubusercontent.com/Pr-Jiang/CrimeIntent/master/previewgif/CrimeIntent2.gif)
 ###修改item的时间：
 ![](https://raw.githubusercontent.com/Pr-Jiang/CrimeIntent/master/previewgif/CrimeIntent3.gif)
-###ViewPager效果：
+###通过操作栏menu添加一个item && ViewPager效果：
 ![](https://raw.githubusercontent.com/Pr-Jiang/CrimeIntent/master/previewgif/CrimeIntent4-viewPager.gif)
 ###Subtitle和横屏效果：
 ![](https://raw.githubusercontent.com/Pr-Jiang/CrimeIntent/master/previewgif/CrimeIntent5.gif)
