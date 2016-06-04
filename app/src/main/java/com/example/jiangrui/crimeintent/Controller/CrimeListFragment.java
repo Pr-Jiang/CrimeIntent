@@ -7,12 +7,16 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
 import android.util.Log;
+import android.view.ActionMode;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -63,7 +67,90 @@ public class CrimeListFragment extends ListFragment {
                 newCrime();
             }
         });
+
+        ListView listView = (ListView) view.findViewById(android.R.id.list);   //获取ListFragment管理的ListView
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+            registerForContextMenu(listView);                 //为listView注册浮动上下文菜单
+        } else {
+            listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
+            listView.setMultiChoiceModeListener(new AbsListView.MultiChoiceModeListener() {
+                @Override
+                public void onItemCheckedStateChanged(ActionMode mode, int position, long id, boolean checked) {
+                    //视图在选中或撤销是触发
+                }
+
+                @Override
+                public boolean onCreateActionMode(ActionMode mode, Menu menu) {   //ActionMode对象创建后调用
+                    MenuInflater menuInflater = mode.getMenuInflater();
+                    menuInflater.inflate(R.menu.crime_list_item_context, menu);
+                    return true;
+                }
+
+                @Override
+                public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+                    /*
+                    在onCreateActionMode(...)方法后，以及当前上下文操作栏需要刷新显示数据时调用
+                     */
+                    return false;
+                }
+
+                @Override
+                public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+                    CrimeLab crimeLab = CrimeLab.get(getActivity());
+                    CrimeAdapter adapter = (CrimeAdapter) getListAdapter();
+                    switch (item.getItemId()) {
+                        case R.id.menu_item_delete_crime:
+                            for (int i = adapter.getCount() - 1; i >= 0; i--) {
+                                if(getListView().isItemChecked(i)){
+                                    crimeLab.deleteCrime(adapter.getItem(i));
+                                }
+                            }
+                            mode.finish();
+                            adapter.notifyDataSetChanged();
+                            return  true;
+                        default:
+                            return false;
+                    }
+                }
+
+                @Override
+                public void onDestroyActionMode(ActionMode mode) {
+                    //在用户退出上下文操作模式或所选菜单项操作已被响应，从而导致ActionMode对象将要销毁时调用
+                }
+            });
+        }
+//        return super.onCreateView(inflater,container,savedInstanceState);
         return view;
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {      //操作栏菜单
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.fragment_crime_list, menu);
+        MenuItem showSubtitle = menu.findItem(R.id.menu_item_show_subtitle);
+        if (mSubtitleVisible && showSubtitle != null)
+            showSubtitle.setTitle(R.string.hide_subtitle);
+    }
+
+    //创建浮动上下文菜单
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        getActivity().getMenuInflater().inflate(R.menu.crime_list_item_context, menu);
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+        int position = info.position;
+        CrimeAdapter adapter = (CrimeAdapter) getListAdapter();
+        Crime crime = adapter.getItem(position);
+        switch (item.getItemId()) {
+            case R.id.menu_item_delete_crime:
+                CrimeLab.get(getActivity()).deleteCrime(crime);
+                adapter.notifyDataSetChanged();                             //update ListView
+                return true;
+        }
+        return super.onContextItemSelected(item);
     }
 
     private void newCrime() {
@@ -72,15 +159,6 @@ public class CrimeListFragment extends ListFragment {
         Intent intent = new Intent(getActivity(), CrimePagerActivity.class);
         intent.putExtra(CrimeFragment.EXTRA_CRIME_ID, crime.getId());
         startActivityForResult(intent, 0);
-    }
-
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        super.onCreateOptionsMenu(menu, inflater);
-        inflater.inflate(R.menu.fragment_crime_list, menu);
-        MenuItem showSubtitle = menu.findItem(R.id.menu_item_show_subtitle);
-        if (mSubtitleVisible && showSubtitle != null)
-            showSubtitle.setTitle(R.string.hide_subtitle);
     }
 
     @TargetApi(11)
@@ -127,6 +205,12 @@ public class CrimeListFragment extends ListFragment {
     public void onResume() {
         super.onResume();
         ((CrimeAdapter) getListAdapter()).notifyDataSetChanged();      //更新列表数据
+    }
+
+    @Override
+    public void onPause() {                                        //对删除操作进行保存
+        super.onPause();
+        CrimeLab.get(getActivity()).saveCrimes();
     }
 
     private class CrimeAdapter extends ArrayAdapter<Crime> {

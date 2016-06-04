@@ -34,7 +34,7 @@ public class CrimeFragment extends Fragment {
     private Crime mCrime;
     private EditText mTitleField;
     private Button mDateButton;
-    private Button mTimeButton;
+    private Button mDeleteButton;
     private CheckBox mSolvedCheckBox;
     public static final String EXTRA_CRIME_ID = "com.example.jiangrui.crimeintent.crime_id";
     private static final String DIALOG_DATE = "date";
@@ -136,15 +136,24 @@ public class CrimeFragment extends Fragment {
                 mCrime.setIsSolved(isChecked);          //Set the crime's solved property
             }
         });
+        mDeleteButton = (Button) view.findViewById(R.id.crime_delete_button);
+        mDeleteButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                CrimeLab.get(getActivity()).deleteCrime(mCrime);
+                Intent intent = new Intent(getActivity(),CrimeListActivity.class);
+                startActivity(intent);
+            }
+        });
         return view;
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(MenuItem item) {                      //设置应用图标的返回功能
         switch (item.getItemId()) {
             case android.R.id.home:
                 if (NavUtils.getParentActivityName(getActivity()) != null) {
-                    NavUtils.navigateUpFromSameTask(getActivity());
+                    NavUtils.navigateUpFromSameTask(getActivity());            //如果当前Activity有父Activity，返回
                     return true;
                 }
             default:
@@ -188,5 +197,11 @@ public class CrimeFragment extends Fragment {
 
     public void updateDate() {
         mDateButton.setText(mCrime.getDate().toString());
+    }
+
+    @Override
+    public void onPause() {                    //对数据进行保存（放在onPause里最安全）
+        super.onPause();
+        CrimeLab.get(getActivity()).saveCrimes();
     }
 }

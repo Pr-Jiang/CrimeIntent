@@ -44,4 +44,12 @@
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"/>
 
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/delete_crime"
+        android:id="@+id/crime_delete_button"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"/>
+
 </LinearLayout>
