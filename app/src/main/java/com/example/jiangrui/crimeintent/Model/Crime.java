@@ -16,11 +16,13 @@ public class Crime {
     private String mTitle;
     private Date mDate;
     private boolean mIsSolved;
+    private Photo mPhoto;
 
     private static final String JSON_ID = "id";
     private static final String JSON_TITLE = "title";
     private static final String JSON_DATE = "date";
     private static final String JSON_SOLVED = "solved";
+    private static final String JSON_PHOTO = "photo";
 
     public Crime() {
         mId = UUID.randomUUID();                      //获取唯一标识符
@@ -32,6 +34,8 @@ public class Crime {
             mTitle = jsonObject.getString(JSON_TITLE);
         mIsSolved = jsonObject.getBoolean(JSON_SOLVED);
         mDate = new Date(jsonObject.getString(JSON_DATE));
+        if(jsonObject.has(JSON_PHOTO))
+            mPhoto = new Photo(jsonObject.getJSONObject(JSON_PHOTO));
     }
 
     public UUID getId() {
@@ -68,6 +72,14 @@ public class Crime {
         mIsSolved = isSolved;
     }
 
+    public Photo getPhoto() {
+        return mPhoto;
+    }
+
+    public void setPhoto(Photo photo) {
+        mPhoto = photo;
+    }
+
     @Override
     public String toString() {
         return mTitle;
@@ -79,6 +91,8 @@ public class Crime {
         json.put(JSON_TITLE,mTitle);
         json.put(JSON_SOLVED,mIsSolved);
         json.put(JSON_DATE,mDate);
+        if(mPhoto!=null)
+            json.put(JSON_PHOTO,mPhoto.toJSON());
         return json;
     }
 }

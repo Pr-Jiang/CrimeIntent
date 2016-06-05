@@ -3,13 +3,17 @@
     package="com.example.jiangrui.crimeintent"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-feature android:name="android.hardware.camera2"/>
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.DeviceDefault.Light">
-        <activity android:name=".Controller.CrimeListActivity"
+        <activity
+            android:name=".Controller.CrimeListActivity"
             android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -21,6 +25,10 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".Controller.CrimeListActivity"/>
         </activity>
+        <activity
+            android:name=".Controller.CrimeCameraActivity"
+            android:screenOrientation="landscape"
+            android:exported="true"/>
     </application>
 
 </manifest>
