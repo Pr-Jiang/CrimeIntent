@@ -45,4 +45,5 @@ public class ImageFragment extends DialogFragment {
         super.onDestroyView();
         PictureUtils.cleanImageView(mImageView);
     }
+
 }

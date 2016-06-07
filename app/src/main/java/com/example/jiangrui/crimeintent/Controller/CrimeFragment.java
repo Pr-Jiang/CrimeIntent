@@ -15,6 +15,7 @@ import android.support.v4.app.NavUtils;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -32,6 +33,7 @@ import com.example.jiangrui.crimeintent.Model.Photo;
 import com.example.jiangrui.crimeintent.PictureUtils;
 import com.example.jiangrui.crimeintent.R;
 
+import java.io.File;
 import java.util.Date;
 import java.util.UUID;
 
@@ -87,15 +89,17 @@ public class CrimeFragment extends Fragment {
         }
         View view = inflater.inflate(R.layout.fragment_crime, container, false);
         mPhotoView = (ImageView) view.findViewById(R.id.crime_imageView);
+        registerForContextMenu(mPhotoView);
         mPhotoView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Photo photo = mCrime.getPhoto();
-                if(photo == null)
+                if (photo == null)
                     return;
                 FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
                 String path = getActivity().getFileStreamPath(photo.getFilename()).getAbsolutePath();
-                ImageFragment.newInstance(path).show(fragmentManager,DIALOG_IMAGE);
+                ImageFragment.newInstance(path)
+                        .show(fragmentManager, DIALOG_IMAGE);
             }
         });
         mPhotoButton = (ImageButton) view.findViewById(R.id.crime_imageButton);
@@ -180,6 +184,22 @@ public class CrimeFragment extends Fragment {
     }
 
     @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        if (mPhotoView.getDrawable() != null)
+            getActivity().getMenuInflater().inflate(R.menu.crimefragment_photo_context, menu);
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_photo_delete:
+                deletePhoto();
+                return true;
+        }
+        return super.onContextItemSelected(item);
+    }
+
+    @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode != Activity.RESULT_OK)
             return;
@@ -238,6 +258,17 @@ public class CrimeFragment extends Fragment {
             bitmapDrawable = PictureUtils.getScaledDrawable(getActivity(), path);
         }
         mPhotoView.setImageDrawable(bitmapDrawable);
+    }
+
+    private void deletePhoto() {
+        Photo photo = mCrime.getPhoto();
+        if (photo != null) {
+            String path = getActivity().getFileStreamPath(photo.getFilename()).getAbsolutePath();
+            File file = new File(path);
+            file.delete();
+        }
+        mCrime.setPhoto(null);
+        mPhotoView.setImageDrawable(null);
     }
 
     @Override
