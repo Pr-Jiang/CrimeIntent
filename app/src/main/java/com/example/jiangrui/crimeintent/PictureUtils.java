@@ -24,8 +24,8 @@ public class PictureUtils {
 
         //Read in the dimensions of the image on disk
         BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(path,options);
+        options.inJustDecodeBounds = true;                  //只解析out...fields,bitmap不加载到内存
+        BitmapFactory.decodeFile(path,options);             //加载bitmap对象但只返回out...fields
         float srcWidth = options.outWidth;
         float srcHeight = options.outHeight;
 
@@ -41,10 +41,10 @@ public class PictureUtils {
                 inSampleSize *= 2;
             }
         }
-        options = new BitmapFactory.Options();
+        options = new BitmapFactory.Options();           //默认options.inJustDecodeBounds = false
         options.inSampleSize = inSampleSize;
 
-        Bitmap bitmap = BitmapFactory.decodeFile(path, options);
+        Bitmap bitmap = BitmapFactory.decodeFile(path, options);   //加载 inSampleSize 比率缩小的bitmap对象
         return new BitmapDrawable(activity.getResources(), bitmap);
     }
 

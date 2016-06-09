@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:orientation="vertical">
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -21,9 +21,9 @@
                 android:id="@+id/crime_imageView"
                 android:layout_width="80dp"
                 android:layout_height="80dp"
-                android:scaleType="centerInside"
                 android:background="@android:color/darker_gray"
-                android:cropToPadding="true"/>
+                android:cropToPadding="true"
+                android:scaleType="centerInside"/>
 
             <ImageButton
                 android:id="@+id/crime_imageButton"
@@ -82,12 +82,36 @@
             android:text="Solved?"/>
     </LinearLayout>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/crime_suspectButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/crime_suspect_text"/>
+
+        <Button
+            android:id="@+id/crime_reportButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/crime_report_text"/>
+
+    </LinearLayout>
+
     <Button
         android:id="@+id/crime_delete_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
+        android:background="@android:color/holo_red_light"
         android:text="@string/delete_crime"/>
 
-</LinearLayout>
+</ScrollView>

@@ -4,16 +4,22 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.database.Cursor;
 import android.graphics.drawable.BitmapDrawable;
 import android.hardware.Camera;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.NavUtils;
+import android.support.v4.content.CursorLoader;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -35,6 +41,7 @@ import com.example.jiangrui.crimeintent.R;
 
 import java.io.File;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -47,6 +54,9 @@ public class CrimeFragment extends Fragment {
     private ImageView mPhotoView;
     private ImageButton mPhotoButton;
     private Button mDateButton;
+    private Button mSuspectButton;
+    private Button mReportButton;
+    private Button mCallButton;
     private Button mDeleteButton;
     private CheckBox mSolvedCheckBox;
     public static final String EXTRA_CRIME_ID = "com.example.jiangrui.crimeintent.crime_id";
@@ -54,10 +64,11 @@ public class CrimeFragment extends Fragment {
     private static final String DIALOG_TIME = "time";
     private static final String DIALOG_SELECT = "select";
     private static final String DIALOG_IMAGE = "image";
-    private static final int REQUEST_SELECT = 2;
-    public static final int REQUEST_DATE = 0;
-    public static final int REQUEST_TIME = 1;
+    private static final int REQUEST_SELECT = 0;
+    public static final int REQUEST_DATE = 1;
+    public static final int REQUEST_TIME = 2;
     private static final int REQUEST_PHOTO = 3;
+    private static final int REQUEST_CONTACT = 4;
 
     public static CrimeFragment newInstance(UUID crimeId) {
 
@@ -157,6 +168,46 @@ public class CrimeFragment extends Fragment {
                 mCrime.setIsSolved(isChecked);          //Set the crime's solved property
             }
         });
+//        boolean isReportbtnSafe = isIntentActionExist(Intent.ACTION_SEND);
+        mReportButton = (Button) view.findViewById(R.id.crime_reportButton);
+//        if (!isReportbtnSafe)
+//            mReportButton.setEnabled(false);
+        mReportButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(Intent.ACTION_SEND);
+                i.setType("text/plain");
+                i.putExtra(Intent.EXTRA_TEXT, getCrimeReport());
+                i.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.crime_report_subject));
+                i = Intent.createChooser(i, getString(R.string.send_report));
+                startActivity(i);
+            }
+        });
+        boolean isSuspectbtnSafe = isIntentActionExist(Intent.ACTION_PICK);
+        mSuspectButton = (Button) view.findViewById(R.id.crime_suspectButton);
+        if (!isSuspectbtnSafe)
+            mSuspectButton.setEnabled(false);
+        mSuspectButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
+                startActivityForResult(i, REQUEST_CONTACT);
+            }
+        });
+        if (mCrime.getSuspect() != null)
+            mSuspectButton.setText(mCrime.getSuspect());         //将mSuspectButton按钮文字设置为suspect
+
+        mCallButton = (Button) view.findViewById(R.id.crime_callButton);
+        if (mCrime.getPhone() != null)
+            mCallButton.setText(mCrime.getPhone());
+        mCallButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Uri suspectPhone = Uri.parse("tel:" + mCrime.getPhone());
+                Intent i = new Intent(Intent.ACTION_DIAL, suspectPhone);
+                startActivity(i);
+            }
+        });
         mDeleteButton = (Button) view.findViewById(R.id.crime_delete_button);
         mDeleteButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -243,6 +294,38 @@ public class CrimeFragment extends Fragment {
             }
 
         }
+        if (requestCode == REQUEST_CONTACT) {
+
+            Uri contactUri = data.getData();
+            CursorLoader cursorLoader = new CursorLoader(getActivity(), contactUri, null, null, null, null);
+            Cursor c = cursorLoader.loadInBackground();
+            String contactId = null;
+            String suspect = null;
+            if (c.moveToFirst()) {       //如果查询到指定联系人
+                //获取联系人的ID
+                contactId = c.getString(c.getColumnIndex(ContactsContract.Contacts._ID));
+                //获取联系人姓名
+                suspect = c.getString(c.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+            }
+            //查询指定联系人的号码
+            Cursor phoneCursor = getActivity().getContentResolver()
+                    .query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                            null, ContactsContract.CommonDataKinds.Phone.CONTACT_ID + "=" + contactId, null, null);
+            String phone = null;
+            if (phoneCursor.moveToFirst())//如果查到指定联系人的号码
+                phone = phoneCursor.getString(
+                        phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));//获取号码
+
+            phoneCursor.close();
+            c.close();
+
+            mCrime.setSuspect(suspect);
+            mCrime.setPhone(phone);
+
+            mSuspectButton.setText(suspect);
+            mCallButton.setText(phone);
+
+        }
 
     }
 
@@ -269,6 +352,36 @@ public class CrimeFragment extends Fragment {
         }
         mCrime.setPhoto(null);
         mPhotoView.setImageDrawable(null);
+    }
+
+    private String getCrimeReport() {
+        String solvedString = null;
+        if (mCrime.isSolved()) {
+            solvedString = getString(R.string.crime_report_solved);
+        } else {
+            solvedString = getString(R.string.crime_report_unsolved);
+        }
+        String dateFormat = "EEE,MMM dd";
+        String dateString = DateFormat.format(dateFormat, mCrime.getDate()).toString();
+
+        String suspect = mCrime.getSuspect();
+        if (suspect == null) {
+            suspect = getString(R.string.crime_report_no_suspect);
+        } else {
+            suspect = getString(R.string.crime_report_suspect, suspect);
+        }
+
+        String report = getString(R.string.crime_report, mCrime.getTitle(), dateString, solvedString, suspect);
+
+        return report;
+    }
+
+    private boolean isIntentActionExist(String action) {
+        PackageManager pm = getActivity().getPackageManager();
+        Intent i = new Intent(action);
+        List<ResolveInfo> activities = pm.queryIntentActivities(i, 0);
+        boolean isIntentSafe = activities.size() > 0;
+        return isIntentSafe;
     }
 
     @Override
