@@ -18,7 +18,7 @@ import java.util.UUID;
 /**
  * Created by Jiang Rui on 2016/5/26.
  */
-public class CrimePagerActivity extends FragmentActivity {
+public class CrimePagerActivity extends FragmentActivity implements CrimeFragment.Callbacks{
     private ViewPager mViewPager;
     private ArrayList<Crime> mCrimes;
     @Override
@@ -46,9 +46,11 @@ public class CrimePagerActivity extends FragmentActivity {
         });
         //实现点击哪个列表项跳转到相对应的详情页面功能
         UUID crimeId = (UUID) getIntent().getSerializableExtra(CrimeFragment.EXTRA_CRIME_ID);
+        Crime crime = CrimeLab.get(this).getCrime(crimeId);
         for (int i = 0;i<mCrimes.size();i++){
             if(mCrimes.get(i).getId().equals(crimeId)){
                 mViewPager.setCurrentItem(i);
+                this.setTitle(crime.getTitle());
                 break;
             }
         }
@@ -70,5 +72,10 @@ public class CrimePagerActivity extends FragmentActivity {
 
             }
         });
+    }
+
+    @Override
+    public void onCrimeUpdate(Crime crime) {
+
     }
 }

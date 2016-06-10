@@ -1,10 +1,14 @@
 package com.example.jiangrui.crimeintent.Controller;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.ListFragment;
 import android.util.Log;
 import android.view.ActionMode;
@@ -36,6 +40,39 @@ public class CrimeListFragment extends ListFragment {
     private ArrayList<Crime> mCrimes;
     private static final String TAG = "CrimeListFragment";
     private boolean mSubtitleVisible;
+    private Callbacks mCallbacks;
+
+    public interface Callbacks {
+        void onCrimeSelected(Crime crime);
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        mCallbacks = (Callbacks) activity;
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mCallbacks = null;
+    }
+
+    public void updateUI() {
+        ((CrimeAdapter) getListAdapter()).notifyDataSetChanged();
+    }
+
+    public static void removeFragment(Crime crime,FragmentManager fragmentManager){
+        CrimeFragment fragment = (CrimeFragment) fragmentManager.findFragmentById(R.id.detailFragmentContainer);
+        if(fragment!=null){                             //判断detailFragmentContainer是否为空
+            if(fragment.getCrimeId()==crime.getId()){   //判断删除的item中是否包含detailFragmentContainer中的视图
+                FragmentTransaction transaction = fragmentManager.beginTransaction();
+                transaction.remove(fragment);
+                transaction.commit();
+            }
+        }
+
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -98,16 +135,20 @@ public class CrimeListFragment extends ListFragment {
                 public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
                     CrimeLab crimeLab = CrimeLab.get(getActivity());
                     CrimeAdapter adapter = (CrimeAdapter) getListAdapter();
+                    FragmentManager fm = getActivity().getSupportFragmentManager();
                     switch (item.getItemId()) {
                         case R.id.menu_item_delete_crime:
                             for (int i = adapter.getCount() - 1; i >= 0; i--) {
-                                if(getListView().isItemChecked(i)){
-                                    crimeLab.deleteCrime(adapter.getItem(i));
+                                if (getListView().isItemChecked(i)) {
+                                    Crime c = adapter.getItem(i);
+                                    removeFragment(c,fm);
+                                    getActivity().setTitle(R.string.crimes_title);
+                                    crimeLab.deleteCrime(c);
                                 }
                             }
                             mode.finish();
                             adapter.notifyDataSetChanged();
-                            return  true;
+                            return true;
                         default:
                             return false;
                     }
@@ -146,6 +187,7 @@ public class CrimeListFragment extends ListFragment {
         Crime crime = adapter.getItem(position);
         switch (item.getItemId()) {
             case R.id.menu_item_delete_crime:
+                removeFragment(crime,getActivity().getSupportFragmentManager());
                 CrimeLab.get(getActivity()).deleteCrime(crime);
                 adapter.notifyDataSetChanged();                             //update ListView
                 return true;
@@ -156,9 +198,11 @@ public class CrimeListFragment extends ListFragment {
     private void newCrime() {
         Crime crime = new Crime();
         CrimeLab.get(getActivity()).addCrime(crime);
-        Intent intent = new Intent(getActivity(), CrimePagerActivity.class);
-        intent.putExtra(CrimeFragment.EXTRA_CRIME_ID, crime.getId());
-        startActivityForResult(intent, 0);
+//        Intent intent = new Intent(getActivity(), CrimePagerActivity.class);
+//        intent.putExtra(CrimeFragment.EXTRA_CRIME_ID, crime.getId());
+//        startActivityForResult(intent, 0);
+        updateUI();
+        mCallbacks.onCrimeSelected(crime);
     }
 
     @TargetApi(11)
@@ -191,9 +235,10 @@ public class CrimeListFragment extends ListFragment {
         Crime crime = ((CrimeAdapter) getListAdapter()).getItem(position);
 //        Log.d(TAG,crime.getTitle()+"was clicked");
 
-        Intent intent = new Intent(getActivity(), CrimePagerActivity.class);      //点击后从列表跳转到详情页面
-        intent.putExtra(CrimeFragment.EXTRA_CRIME_ID, crime.getId());        //传递被点击的crime 的 ID
-        startActivity(intent);
+//        Intent intent = new Intent(getActivity(), CrimePagerActivity.class);      //点击后从列表跳转到详情页面
+//        intent.putExtra(CrimeFragment.EXTRA_CRIME_ID, crime.getId());        //传递被点击的crime 的 ID
+//        startActivity(intent);
+        mCallbacks.onCrimeSelected(crime);
     }
 
     /*
